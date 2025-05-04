@@ -17,10 +17,8 @@ def root():
         "documentacao": "https://fastapi.tiangolo.com/"
     }
 
-@app.post("/webhook", response_class=PlainTextResponse)
+@app.post("/webhook")
 async def whatsapp_webhook(From: str = Form(...), Body: str = Form(...)):
-    print(f"Mensagem recebida de {From}: {Body}")
-
     try:
         chat_completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -33,8 +31,9 @@ async def whatsapp_webhook(From: str = Form(...), Body: str = Form(...)):
     except Exception as e:
         texto = f"Ocorreu um erro: {str(e)}"
 
+    # Monta resposta em TwiML
     twiml = MessagingResponse()
-    msg = twiml.message()
-    msg.body(texto)
+    twiml.message(texto)
 
-    return str(twiml)
+    # Retorna com Content-Type correto para o Twilio
+    return Response(content=str(twiml), media_type="application/xml")
